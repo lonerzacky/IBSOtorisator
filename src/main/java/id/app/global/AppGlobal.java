@@ -23,7 +23,6 @@ package id.app.global;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InvalidObjectException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
@@ -91,40 +90,6 @@ public class AppGlobal {
         return errMsg;
     }
 
-    public static String GetMyId(String sKeyName) throws SQLException {
-        Connection conn = null;
-        Statement st = null;
-        ResultSet rs = null;
-        String val_return = "";
-        try {
-            conn = ConnectionPoolSys.getConnection();
-            String query = "select KEYVALUE from sys_mysysid  where KeyName='" + sKeyName + "'";
-            st = conn.prepareStatement(query);
-            rs = st.executeQuery(query);
-            if (!rs.next()) {
-                val_return = "";
-            } else {
-                val_return = rs.getString("KEYVALUE");
-            }
-            st.close();
-            rs.close();
-            conn.close();
-        } catch (SQLException | InvalidObjectException ex) {
-            ex.printStackTrace();
-            System.out.println("Gagal pengambilan data " + sKeyName);
-        } finally {
-            if (st != null) {
-                st.close();
-            }
-            if (rs != null) {
-                rs.close();
-            }
-            if (conn != null) {
-                conn.close();
-            }
-        }
-        return val_return;
-    }
 
     private static String getAccessToken() throws IOException {
         GoogleCredentials googleCredentials = GoogleCredentials
@@ -144,8 +109,9 @@ public class AppGlobal {
                 HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         HttpPost request;
         HttpResponse httpResp;
-        request = new HttpPost("https://fcm.googleapis.com/v1/projects/ibs-otorisator-aea03/messages:send");
-        request.addHeader("Authorization", "Bearer " + getAccessToken());
+        request = new HttpPost("https://fcm.googleapis.com/v1/projects/ibs-otorisatorpps/messages:send");
+        String accessToken = getAccessToken();
+        request.addHeader("Authorization", "Bearer " + accessToken);
         request.addHeader("Content-Type", "application/json; UTF-8");
         JSONObject jsonMData = new JSONObject();
         JSONObject jsonData = new JSONObject();
@@ -172,7 +138,7 @@ public class AppGlobal {
         request.setEntity(params);
         httpResp = httpClient.execute(request);
         int code = httpResp.getStatusLine().getStatusCode();
-        System.out.println(httpResp.getStatusLine().getReasonPhrase());
+        System.out.println(httpResp);
         return code == 200;
     }
 
